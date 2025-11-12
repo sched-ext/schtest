@@ -1,6 +1,6 @@
 //! Basic tests.
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::util::stats::Distribution;
 use crate::util::system::{CPUMask, CPUSet, System};
@@ -26,7 +26,7 @@ test!("self_test", self_test);
 fn self_bench(args: &BenchArgs) -> Result<()> {
     let mut ctx = Context::create()?;
     measure!(&mut ctx, &args, "1ms", (), |iters| {
-        let spinner = Spinner::default();
+        let spinner = Spinner::new(Instant::now());
         spinner.spin(Duration::from_millis(iters as u64));
         Ok(Count(iters as u64))
     })

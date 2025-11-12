@@ -1,7 +1,7 @@
 //! Tests for latency scenarios.
 
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use anyhow::Result;
 
@@ -46,7 +46,7 @@ fn adaptive_priority() -> Result<()> {
                 let slow_sem_copy = slow_sem.clone();
                 let slow_sem_ret_copy = slow_sem_ret.clone();
                 s.spawn(move || {
-                    let spinner = Spinner::default();
+                    let spinner = Spinner::new(Instant::now());
                     mask_copy.run(move || {
                         loop {
                             slow_sem_copy.consume(1, 1, None);
@@ -78,7 +78,7 @@ fn adaptive_priority() -> Result<()> {
                 let fast_sem_copy = fast_sem.clone();
                 let fast_sem_ret_copy = fast_sem_ret.clone();
                 s.spawn(move || {
-                    let spinner = Spinner::default();
+                    let spinner = Spinner::new(Instant::now());
                     mask_copy.run(move || {
                         loop {
                             fast_sem_copy.consume(1, 1, None);

@@ -1,6 +1,6 @@
 //! Tests for latency scenarios.
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use anyhow::Result;
 
@@ -32,7 +32,7 @@ fn fairness() -> Result<()> {
                 (mask),
                 move |mut get_iters| {
                     mask.run(move || {
-                        let spinner = Spinner::default();
+                        let spinner = Spinner::new(Instant::now());
                         loop {
                             spinner.spin(Duration::from_millis(get_iters() as u64));
                         }
@@ -49,7 +49,7 @@ fn fairness() -> Result<()> {
             None,
             (),
             move |mut get_iters| {
-                let spinner = Spinner::default();
+                let spinner = Spinner::new(Instant::now());
                 loop {
                     spinner.spin(Duration::from_millis(get_iters() as u64));
                 }

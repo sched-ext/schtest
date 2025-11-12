@@ -10,6 +10,7 @@ use crate::util::cgroups::Cgroup;
 use crate::util::child::Child;
 use crate::util::sched::{Sched, SchedStats};
 use crate::util::shared::SharedBox;
+use crate::util::system::{CPUSet, System};
 use crate::workloads::context::Context;
 use crate::workloads::semaphore::Semaphore;
 
@@ -68,6 +69,28 @@ impl ProcessHandle {
     /// Return stats for the process.
     pub fn stats(&self) -> Result<SchedStats> {
         Sched::get_process_thread_stats(Some(self.pid))
+    }
+
+    /// Set the affinity of this process to a specific CPU set.
+    ///
+    /// # Arguments
+    ///
+    /// * `set` - The CPU set to pin this process to
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure.
+    pub fn set_affinity<T: CPUSet>(&self, set: &T) -> Result<()> {
+        set.set_affinity_for_pid(self.pid.as_raw())
+    }
+
+    /// Clear the affinity of this process (set it to all CPUs).
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure.
+    pub fn clear_affinity(&self) -> Result<()> {
+        System::clear_affinity_for_pid(self.pid.as_raw())
     }
 }
 

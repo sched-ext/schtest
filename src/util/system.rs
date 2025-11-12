@@ -86,6 +86,34 @@ pub trait CPUSet {
     fn migrate(&self) -> Result<()> {
         self.run(|| {})
     }
+
+    /// Set the affinity of a specific process/thread to this CPU set.
+    ///
+    /// # Arguments
+    ///
+    /// * `pid` - The process ID (or 0 for current process)
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure.
+    fn set_affinity_for_pid(&self, pid: i32) -> Result<()> {
+        let target = self.mask();
+        let rc = unsafe {
+            libc::sched_setaffinity(
+                pid,
+                std::mem::size_of::<libc::cpu_set_t>(),
+                &target,
+            )
+        };
+        if rc < 0 {
+            return Err(anyhow!(
+                "unable to set CPU affinity for pid {}: {}",
+                pid,
+                std::io::Error::last_os_error()
+            ));
+        }
+        Ok(())
+    }
 }
 
 impl CPUMask {
@@ -309,6 +337,21 @@ pub struct System {
 }
 
 impl System {
+    /// Clear the affinity for a specific process (set it to all CPUs).
+    ///
+    /// # Arguments
+    ///
+    /// * `pid` - The process ID (or 0 for current process)
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure.
+    pub fn clear_affinity_for_pid(pid: i32) -> Result<()> {
+        // Load the system to get all CPUs
+        let system = System::load()?;
+        system.set_affinity_for_pid(pid)
+    }
+
     /// Get the current CPU ID.
     pub fn current_cpu() -> Result<i32> {
         let cpu = unsafe { libc::sched_getcpu() };
